@@ -1,0 +1,36 @@
+#popup{
+    position: absolute;
+    background-color: #00000080;
+    -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+    padding: 10px;
+    border-radius: 10px;
+    bottom: 20px;
+    left: -55px;
+    min-width: 100px;
+    color: red;
+}
+
+#popup::after, #popup::before{
+    top: 100%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+#popup::after{
+    border-top-color: #00000040;
+    border-width: 10px;
+    left: 48px;
+    margin-left: -10px;
+}
+
+#popup::before{
+    border-top-color: #00000040;
+    border-width: 11px;
+    left: 48px;
+    margin-left: -11px;
+}
