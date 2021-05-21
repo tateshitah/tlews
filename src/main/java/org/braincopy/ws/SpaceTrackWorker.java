@@ -188,7 +188,7 @@ public class SpaceTrackWorker {
 	 * @return
 	 */
 	public double getDoubleDay(Calendar calendar) {
-		double result = (double) calendar.get(Calendar.DAY_OF_YEAR) - 1;
+		double result = (double) calendar.get(Calendar.DAY_OF_YEAR) ;
 		result += ((double) calendar.get(Calendar.HOUR_OF_DAY)) / 24.0;
 		result += ((double) calendar.get(Calendar.MINUTE)) / (24.0 * 60);
 		result += ((double) calendar.get(Calendar.SECOND)) / (24.0 * 60 * 60);
