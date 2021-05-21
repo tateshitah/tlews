@@ -20,8 +20,8 @@ var map;
 var gnssString = "JE";
 var url_DateTime = "2014-03-01_00:00:00";
 var update_timeout = null;
-//const url_string = "http://localhost:8080";
-const url_string = "https://braincopy.org";
+const url_string = "http://localhost:8080";
+//const url_string = "https://braincopy.org";
 
 /*
  * two dimensional array the number of trackCoordinatesArray[] is the number of
@@ -136,7 +136,7 @@ function startPlot(iss_cat_id) {
 		}
 		var url = url_string + "/tlews/app/groundTrack?" + "dateTime="
 			+ url_DateTime + "&norad_cat_id=" + iss_cat_id
-			+ "&format=jsonp&term=21600&step=100";
+			+ "&format=jsonp&term=5400&step=100";
 		load_src(url);
 	}, 200);
 }
@@ -194,8 +194,8 @@ function roadSatellite() {
 	};
 	const url =
 	//'http://localhost:8080/tlews/res/satelliteDataBase.txt';
-	//'http://127.0.0.1:5501/src/main/webapp/res/satelliteDataBase.txt';
-	  'https://braincopy.org/WebContent/assets/satelliteDataBase.txt';
+	'http://127.0.0.1:5501/src/main/webapp/res/satelliteDataBase.txt';
+	//  'https://braincopy.org/WebContent/assets/satelliteDataBase.txt';
 	httpReq.open("GET", url, true);
 	httpReq.send(null);
 }

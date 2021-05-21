@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013 - 2020 Hiroaki Tateshita
+Copyright (c) 2013 - 2021 Hiroaki Tateshita
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -165,8 +165,8 @@ public class GroundTrackResource {
 															// date
 
 					Vector<Sgp4Data> results = sgp4.runSgp4(tempTLE.getLine1(), tempTLE.getLine2(), startYear, startDay,
-							stopYear, stopDay, step / 60);// step's unit is
-															// second
+							stopYear, stopDay, (double)step / 60.0);// step's unit is
+															// second but runSgp4()'s last param is minutes.
 					PositionECI posEci = null;
 					PositionLLH posllh = null;
 					GregorianCalendar dateAndTime = null;
