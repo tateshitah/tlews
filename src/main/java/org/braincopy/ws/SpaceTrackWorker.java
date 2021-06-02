@@ -171,7 +171,8 @@ public class SpaceTrackWorker {
 		GregorianCalendar result = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
 		result.set(Calendar.YEAR, year);
 		int daysOfYear = (int) days;
-		result.set(Calendar.DAY_OF_YEAR, daysOfYear + 1);
+		//result.set(Calendar.DAY_OF_YEAR, daysOfYear + 1);// maybe 1 not necessary
+		result.set(Calendar.DAY_OF_YEAR, daysOfYear );
 		double hours = (days - (double) daysOfYear) * 24;
 		int hourOfDay = (int) hours;
 		result.set(Calendar.HOUR_OF_DAY, hourOfDay);

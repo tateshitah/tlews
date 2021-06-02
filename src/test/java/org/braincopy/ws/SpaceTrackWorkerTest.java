@@ -96,4 +96,12 @@ public class SpaceTrackWorkerTest {
         assertEquals(131.16666, days, 0.001);
         System.out.println(""+days);
     }
+
+    @Test
+    public void testGetCalendarFmYearAndDays(){
+        SpaceTrackWorker worker = new SpaceTrackWorker();
+        Calendar calendar = worker.getCalendarFmYearAndDays(2021, 151.5);
+        assertEquals(151, calendar.get(Calendar.DAY_OF_YEAR),0.1);
+    }
+
 }

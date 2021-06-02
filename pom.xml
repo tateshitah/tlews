@@ -6,7 +6,7 @@
 
   <groupId>org.braincopy.ws</groupId>
   <artifactId>tlews</artifactId>
-  <version>0.6.0</version>
+  <version>0.7.0</version>
   <packaging>war</packaging>
 
   <name>tlews Maven Webapp</name>

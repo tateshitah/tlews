@@ -59,6 +59,7 @@ import sgp4v.Sgp4Data;
 import sgp4v.Sgp4Unit;
 
 /**
+ * azimuth 0 means just east direction.
  * http://localhost:8080/tlews/app/az_and_el?dateTime=2020-06-09_13:37:35&lat=0.0&lon=0.0&norad_cat_id=25544
  * @author Hiroaki Tateshita
  * @version 0.5.0
@@ -109,8 +110,8 @@ public class AzimuthAndElevationResource {
 			@DefaultValue("140.129806") @QueryParam("lon") final float longitude,
 			@DefaultValue("-9999") @QueryParam("dateTime") final String dateTimeStr,
 			@DefaultValue("86400") @QueryParam("term") final int term,
-			@DefaultValue("86400") @QueryParam("step") final int step,
-			@DefaultValue("00000") @QueryParam("norad_cat_id") final String noradCatId,
+			@DefaultValue("3600") @QueryParam("step") final int step,
+			@DefaultValue("25544") @QueryParam("norad_cat_id") final String noradCatId,
 			@DefaultValue("callback") @QueryParam("callback") final String callback) {
 		final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 		try {
@@ -153,7 +154,7 @@ public class AzimuthAndElevationResource {
 															// date
 
 					final Vector<Sgp4Data> results = sgp4.runSgp4(tempTLE.getLine1(), tempTLE.getLine2(), startYear,
-							startDay, stopYear, stopDay, step / 60);// step's unit is second
+							startDay, stopYear, stopDay, (double)step / 60.0);// step's unit is second
 					PositionECI posEci = null;
 					PositionENU posEnu = null;
 					GregorianCalendar dateAndTime = null;
