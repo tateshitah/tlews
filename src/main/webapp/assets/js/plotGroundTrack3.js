@@ -124,7 +124,7 @@ function initialize() {
 function startPlot(iss_cat_id) {
 	$("#loading")
 		.append(
-			'<p style="font-family:arial;color:red;">now loading <img src="res/loading.gif"></p>');
+			'<p style="font-family:arial;color:red;">now loading <img src="assets/images/loading.gif"></p>');
 
 	update_timeout = setTimeout(function () {
 		//alert("here click event #2");
@@ -195,7 +195,7 @@ function loadSatellite() {
 	};
 	const url =
 		//'http://localhost:8080/tlews/res/satelliteDataBase.txt';
-		'http://127.0.0.1:5501/src/main/webapp/res/satelliteDataBase.txt';
+		'http://127.0.0.1:5501/src/main/webapp/assets/satelliteDataBase.txt';
 	//  'https://braincopy.org/WebContent/assets/satelliteDataBase.txt';
 	httpReq.open("GET", url, true);
 	httpReq.send(null);
@@ -210,11 +210,11 @@ function convertCoordinate(longitude, latitude) {
  * @param {*} ele_sat is should be Satellite object
  */
 function satelliteStyle(ele_sat) {
-	let src_str = 'res/drawable/qzss.gif';
+	let src_str = '';
 	if (ele_sat.imgStr == "qzs-1") {
-		src_str = 'res/qzs-1.png';
+		src_str = 'assets/images/qzs-1.png';
 	} else if (ele_sat.imgStr == "ISS") {
-		src_str = 'res/iss.png';
+		src_str = 'assets/images/iss.png';
 	}
 	return new ol.style.Style({
 		image: new ol.style.Icon({
