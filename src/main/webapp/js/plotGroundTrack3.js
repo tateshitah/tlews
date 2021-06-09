@@ -4,13 +4,13 @@
  * 
  * This JavaScript is for groundTrack.html. groundTrack.html is for Android
  * application GNSSFinder. The application's Map function will call by using
- * following URL "https://braincopy.org/gnssws/groundTrack.html?gnss=***"
+ * following URL "https://braincopy.org/tlews/app/groundTrack.html?***=***"
  * 
  * OpenLayers API ver. 5.3.0
  * 
  * Hiroaki Tateshita 
  *  
- * version 0.3.8
+ * version 0.5.0
  * 
  */
 
@@ -23,11 +23,11 @@ var update_timeout = null;
 const url_string = "http://localhost:8080";
 //const url_string = "https://braincopy.org";
 
-/*
- * two dimensional array the number of trackCoordinatesArray[] is the number of
- * satellite the number of trackCoordinatesArray[][] is the number of the data
+/** 
+ * two dimensional array, the number of trackCoordinatesArray[] is the number of
+ * satellite, the number of trackCoordinatesArray[][] is the number of the data
  * of each satellite.
- * 
+ * value also is string array, whose number is 4: Lat, Lon, Date, Time
  */
 var trackCoordinatesArray = new Array();
 
@@ -65,10 +65,7 @@ function initialize() {
 
 	/* Initializing track coordinates array */
 
-	roadSatellite();
-
-
-
+	loadSatellite();
 
 
 	/* Setting Current date and time */
@@ -120,6 +117,10 @@ function initialize() {
 
 }
 
+/**
+ * 
+ * @param {*} iss_cat_id 
+ */
 function startPlot(iss_cat_id) {
 	$("#loading")
 		.append(
@@ -136,7 +137,7 @@ function startPlot(iss_cat_id) {
 		}
 		var url = url_string + "/tlews/app/groundTrack?" + "dateTime="
 			+ url_DateTime + "&norad_cat_id=" + iss_cat_id
-			+ "&format=jsonp&term=5400&step=100";
+			+ "&format=jsonp&term=5400&step=60";
 		load_src(url);
 	}, 200);
 }
@@ -151,13 +152,13 @@ function load_src(url) {
 	document.body.appendChild(script);
 }
 
-function colorString(value) {
+function colorString(_value) {
 	return '#FF4040';
 }
 
 
 /**
- * class for satellite.
+ * class definition for satellite.
  */
 function Satellite(_catNo, _rnxStr, _imgStr, _description) {
 	this.catNo = _catNo;
@@ -167,10 +168,10 @@ function Satellite(_catNo, _rnxStr, _imgStr, _description) {
 }
 
 /**
- * road satellite data from text file. output is array of Satellite objects.
+ * load satellite data from text file. output is array of Satellite objects.
  * This method contains initialization of trackCoordinatesArray and satArray.
  */
-function roadSatellite() {
+function loadSatellite() {
 
 	let httpReq = new XMLHttpRequest();
 	httpReq.onreadystatechange = function callback_inRoadSatDB() {
@@ -179,7 +180,7 @@ function roadSatellite() {
 			// road database
 			lines = httpReq.responseText.split("\n", 50);
 			ele_line = new Array();
-			lines.forEach(function (ele, index, array) {
+			lines.forEach(function (ele, index, _array) {
 				ele_line = ele.split("\t", 5);
 				satArray[index] = new Satellite(ele_line[0], ele_line[1],
 					ele_line[2], ele_line[3]);
@@ -193,8 +194,8 @@ function roadSatellite() {
 		}
 	};
 	const url =
-	//'http://localhost:8080/tlews/res/satelliteDataBase.txt';
-	'http://127.0.0.1:5501/src/main/webapp/res/satelliteDataBase.txt';
+		//'http://localhost:8080/tlews/res/satelliteDataBase.txt';
+		'http://127.0.0.1:5501/src/main/webapp/res/satelliteDataBase.txt';
 	//  'https://braincopy.org/WebContent/assets/satelliteDataBase.txt';
 	httpReq.open("GET", url, true);
 	httpReq.send(null);
@@ -227,7 +228,7 @@ function satelliteStyle(ele_sat) {
 
 /**
  * 
- * @param values are the data array from json data of gnssws/groundTrack web api.
+ * @param values are the data array from json data of tlews/groundTrack web api.
  * 
  */
 function createAndDrawTrackCoordinateArray(values) {
@@ -246,31 +247,63 @@ function createAndDrawTrackCoordinateArray(values) {
 	 */
 	values.forEach(createTrackCoordinateArray);
 
-	trackCoordinatesArray.forEach(function (ele, index, array) {
-		if (ele.length > 0) {
+	trackCoordinatesArray.forEach(function (ele, index, _array) {
+		if (ele.length > 0) {//ele is an array of lat, lon of each satellite.
 			let lineStrings = new ol.geom.MultiLineString([]); // line instance of the path
 			let lineStrArray = new Array();                    // line data array as lineString format [[pt0,pt1],[pt1,pt2],[pt2,pt3],....]
-			let lineStrArray2 = new Array();
+			let lineStrArray2 = new Array();// lineStrArray will be divided on latitude 180 and -180 deg.
 
+			/*
+			* groundTrackFeatures function is defined in "greatCircle.js"
+			*/
 			//lineStrArray2 = groundTrackFeatures(test_ele);
 			lineStrArray2 = groundTrackFeatures(ele);
 
-			lineStrArray2.forEach(function (val, i) {
-				lineStrArray.push(val);
-				lineStrings.setCoordinates(lineStrArray);
+			lineStrArray2.forEach(function (val, _i) {
+				lineStrArray.push(val);//val is a coordinate array divided on lat +/-180
+				lineStrings.setCoordinates(lineStrArray);//lineStrings is OpenLayer object for line
 				trackLineArray.push(new ol.Feature(lineStrings.transform('EPSG:4326', 'EPSG:3857')));
 			});
 
-			let marker = new ol.Feature({
-				geometry: new ol.geom.Point(convertCoordinate(ele[0][0], ele[0][1])),
-				name: satArray[index].description,
-				id: satArray[index].catNo
+			/*
+			* in ISS case, index should be only 0.
+			*  in this part, set a style including ISS icon image at the 1st point of the lat lon array.
+			* create marker
+			* ele is an array of lat, lon of each satellite.
+			*  so _val is an array: [lat, lon].
+			*/
+			ele.forEach(function (_val, _i) {
+				let tmp_marker = null;
+				if (_i == 0) {
+					tmp_marker = new ol.Feature({
+						geometry: new ol.geom.Point(convertCoordinate(_val[0], _val[1])),
+						name: satArray[index].description,
+						id: satArray[index].catNo,
+						date: _val[2],
+						time: _val[3]
+					});
+					tmp_marker.setStyle(satelliteStyle(satArray[index]));
+				} else {
+					tmp_marker = new ol.Feature({
+						geometry: new ol.geom.Point(convertCoordinate(_val[0], _val[1])),
+						name: satArray[index].description,
+						id: satArray[index].catNo,
+						date: _val[2],
+						time: _val[3]
+					});
+					tmp_marker.setStyle(new ol.style.Style({
+						image: new ol.style.Circle({
+							radius: 5,
+							fill: new ol.style.Fill({
+								color: 'blue'
+							})
+						})
+					}));
+				}
+				marker_array.push(tmp_marker);
 			});
-			marker.setStyle(satelliteStyle(satArray[index]));
-			marker_array.push(marker);
 
 		}
-
 
 	});
 
@@ -286,12 +319,12 @@ function createAndDrawTrackCoordinateArray(values) {
 		source: new ol.source.OSM()
 	});
 
-//For GSI Tile
+	//For GSI Tile
 	const gsiLayer = new ol.layer.Tile({
 		source: new ol.source.XYZ({
-        url: "https://cyberjapandata.gsi.go.jp/xyz/english/{z}/{x}/{y}.png",
-        projection: "EPSG:3857"
-	  })
+			url: "https://cyberjapandata.gsi.go.jp/xyz/english/{z}/{x}/{y}.png",
+			projection: "EPSG:3857"
+		})
 	});
 
 	const vectorSource = new ol.source.Vector({
@@ -307,7 +340,7 @@ function createAndDrawTrackCoordinateArray(values) {
 	});
 
 	let map = new ol.Map({
-//		layers: [osmLayer, rabelLayer, lineVector],
+		//		layers: [osmLayer, rabelLayer, lineVector],
 		layers: [gsiLayer, rabelLayer, lineVector],
 		target: document.getElementById('map'),
 		view: new ol.View({
@@ -335,7 +368,7 @@ function createAndDrawTrackCoordinateArray(values) {
 	/*
 	 * Event when click
 	 */
-	map.on('click', function (event) {
+	map.on('click', function (_event) {
 		if (!isDrawn) {
 			startPlot(paramms[1]);
 			isDrawn = true;
@@ -365,16 +398,20 @@ function createAndDrawTrackCoordinateArray(values) {
 	 * when satellite is clicked
 	 */
 	let select = new ol.interaction.Select();
+	
 	map.addInteraction(select);
 	select.on('select', function (e) {
 		//		let c =e.target.getFeatures().getLength(); 
 		if (e.target.getFeatures().getLength() > 0) {
-			let name = e.target.getFeatures().item(0).get('name');
+			let obj = e.target.getFeatures().item(0);
+			let name = obj.get('name');
 			if (name) {//if name is not undefined
 				let id = e.target.getFeatures().item(0).get('id');
+				let date = obj.get('date');
+				let time = obj.get('time');
+				element.innerHTML = '<code>NORAD ID:' + id + '</code><br/>' + name+
+				'<br><code>'+date + ' '+time+'</code>';
 				let coordinates = e.target.getFeatures().item(0).getGeometry().getCoordinates();
-				element.innerHTML = '<code>NORAD ID:' + id + '</code><br/>' + name;
-
 				popup.setPosition(coordinates);
 			}
 		} else {
@@ -385,23 +422,28 @@ function createAndDrawTrackCoordinateArray(values) {
 }
 
 /**
- * input data to trackCoordinatesArray from values gotten via gnssws with jsonp format.
+ * input data to trackCoordinatesArray (2 dimention array) from values gotten via tlews with jsonp format.
  * @param e
  *            element of values
  */
 function createTrackCoordinateArray(e) {
 	satArray.some(function (ele_sat, i) {
 		if (e.SatObservation.SatelliteNumber == ele_sat.catNo) {
-			if (e.SatObservation.Sensor.SensorLocation.Longitude < 0) {
+			//if (e.SatObservation.Sensor.SensorLocation.Longitude < 0) {
 				trackCoordinatesArray[i][satNo[i]] = [
 					e.SatObservation.Sensor.SensorLocation.Longitude,
-					e.SatObservation.Sensor.SensorLocation.Latitude];
-
+					e.SatObservation.Sensor.SensorLocation.Latitude,
+					e.SatObservation.ObDate,
+					e.SatObservation.ObTime
+				];
+/*
 			} else {
 				trackCoordinatesArray[i][satNo[i]] = [
 					e.SatObservation.Sensor.SensorLocation.Longitude,
 					e.SatObservation.Sensor.SensorLocation.Latitude];
-			}
+					e.SatObservation.ObDate,
+					e.SatObservation.ObTime
+			}*/
 			satNo[i]++;
 
 			return;
