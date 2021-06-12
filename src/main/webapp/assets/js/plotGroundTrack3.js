@@ -10,14 +10,13 @@
  * 
  * Hiroaki Tateshita 
  *  
- * version 0.5.0
+ * version 0.6.0
  * 
  */
 
 
 
-var map;
-var gnssString = "JE";
+let map;
 var url_DateTime = "2014-03-01_00:00:00";
 var update_timeout = null;
 const url_string = "http://localhost:8080";
@@ -35,13 +34,13 @@ var trackCoordinatesArray = new Array();
  * trackLine is PolyLine of each satellite. the number of this trackLineArray is
  * the number of satellite.
  */
-var trackLineArray = new Array();
+let trackLineArray = new Array();
 
 /*
  * this array is Marker including satellite image. so the number of this array
  * is the number of satellite.
  */
-var markerArray = new Array();
+//var markerArray = new Array();
 
 /*
  * this array of Satellite Object is data from satellite database from text file
@@ -58,15 +57,16 @@ var isDrawn = false;
 
 /**
  * Icon Array
+ * this array is Marker including satellite image. so the number of this array
+ * is the number of satellite.
  */
 let marker_array = [];
 
+/**
+ * Set current date and time and call startPlot.
+ * This function will be called in the html.
+ */
 function initialize() {
-
-	/* Initializing track coordinates array */
-
-	loadSatellite();
-
 
 	/* Setting Current date and time */
 	var currentDateTime = new Date();
@@ -118,13 +118,16 @@ function initialize() {
 }
 
 /**
- * 
+ * this function will be called in html for updating
  * @param {*} iss_cat_id 
  */
 function startPlot(iss_cat_id) {
 	$("#loading")
 		.append(
 			'<p style="font-family:arial;color:red;">now loading <img src="assets/images/loading.gif"></p>');
+
+	/* Initializing track coordinates array */
+	loadSatellite();
 
 	update_timeout = setTimeout(function () {
 		//alert("here click event #2");
@@ -169,7 +172,7 @@ function Satellite(_catNo, _rnxStr, _imgStr, _description) {
 
 /**
  * load satellite data from text file. output is array of Satellite objects.
- * This method contains initialization of trackCoordinatesArray and satArray.
+ * This method contains initialization of trackCoordinatesArray, satArray, marker_array, trackLineArray
  */
 function loadSatellite() {
 
@@ -193,10 +196,12 @@ function loadSatellite() {
 			}
 		}
 	};
+	marker_array = new Array();
+	trackLineArray = new Array();
 	const url =
 		//'http://localhost:8080/tlews/res/satelliteDataBase.txt';
 		'http://127.0.0.1:5501/src/main/webapp/assets/satelliteDataBase.txt';
-	//  'https://braincopy.org/WebContent/assets/satelliteDataBase.txt';
+	//  'https://braincopy.org/tle/assets/satelliteDataBase.txt';
 	httpReq.open("GET", url, true);
 	httpReq.send(null);
 }
@@ -227,7 +232,8 @@ function satelliteStyle(ele_sat) {
 
 
 /**
- * 
+ * a kind of "main" function.
+ * necessary initialization should be finished before this function is called
  * @param values are the data array from json data of tlews/groundTrack web api.
  * 
  */
@@ -251,7 +257,7 @@ function createAndDrawTrackCoordinateArray(values) {
 		if (ele.length > 0) {//ele is an array of lat, lon of each satellite.
 			let lineStrings = new ol.geom.MultiLineString([]); // line instance of the path
 			let lineStrArray = new Array();                    // line data array as lineString format [[pt0,pt1],[pt1,pt2],[pt2,pt3],....]
-			let lineStrArray2 = new Array();// lineStrArray will be divided on latitude 180 and -180 deg.
+			let lineStrArray2 = new Array();// lineStrArray will be divided on latitude 180 and -180 deg and stored in this array.
 
 			/*
 			* groundTrackFeatures function is defined in "greatCircle.js"
@@ -311,6 +317,9 @@ function createAndDrawTrackCoordinateArray(values) {
 		features: marker_array
 	});
 
+	/**
+	 * this layer include icon markers!
+	 */
 	let rabelLayer = new ol.layer.Vector({
 		source: markerSource
 	});
@@ -339,9 +348,19 @@ function createAndDrawTrackCoordinateArray(values) {
 		})
 	});
 
-	let map = new ol.Map({
+	if(map != null){
+		let temp_layer_array = map.getLayers();
+		temp_layer_array.pop();
+		temp_layer_array.pop();
+		temp_layer_array.push(lineVector);
+		temp_layer_array.push(rabelLayer);
+		let temp_layer_group = map.getLayerGroup();
+		temp_layer_group.setLayers(temp_layer_array);
+		map.setLayerGroup(temp_layer_group);
+	}else{
+	map = new ol.Map({
 		//		layers: [osmLayer, rabelLayer, lineVector],
-		layers: [gsiLayer, rabelLayer, lineVector],
+		layers: [gsiLayer, lineVector, rabelLayer],
 		target: document.getElementById('map'),
 		view: new ol.View({
 			center: convertCoordinate(131.129172, 12.068235),
@@ -349,6 +368,7 @@ function createAndDrawTrackCoordinateArray(values) {
 		}),
 		controls: ol.control.defaults()
 	});
+}
 
 	/**
 	 * popup window for a satellite
